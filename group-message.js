@@ -247,7 +247,7 @@ bot.on('message.group', function(e) {
 				}
 				
 				if (data.length <= 0) {
-	            	bot.sendPrivateMsg(fromAccount, '没有更多投稿记录了');
+	            	bot.sendGroupMsg(fromGroup, '没有更多投稿记录了');
 					return;
 	            }
 				
