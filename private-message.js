@@ -280,4 +280,19 @@ bot.on('message.private', function(e) {
 			});
 		}
 	}
+	
+	if (command[0] == 'status' || command[0] == 'stat') {
+		let status = bot.stat;
+		let result = '';
+
+		result += '机器人目前存活\n' +
+		          '启动时间：' + global.f.TimeToText(status.start_time) + '\n' +
+				  '掉线次数：' + status.lost_times + '次\n' +
+				  '总共收到消息 ' + status.recv_msg_cnt + ' 条\n' +
+				  '总共发送消息 ' + status.sent_msg_cnt + ' 条\n' +
+				  '消息速率：' + status.msg_cnt_per_min + '条/分钟\n' +
+				  'At ' + global.f.TimeToText(new Date());
+		
+		bot.sendPrivateMsg(fromAccount, result);
+	}
 });
