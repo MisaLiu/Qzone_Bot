@@ -416,10 +416,27 @@ bot.on('message.group', function(e) {
 		global.f.UnmuteUser(toAccount);
 		bot.sendGroupMsg(fromGroup, '已执行操作');
 	}
+	
+	if (command[0] == 'status' || command[0] == 'stat') {
+		let status = bot.stat;
+		let result = '';
+
+		result += '机器人目前存活\n' +
+		          '启动时间：' + global.f.TimeToText(status.start_time) + '\n' +
+				  '掉线次数：' + status.lost_times + '次\n' +
+				  '总共收到消息 ' + status.recv_msg_cnt + ' 条\n' +
+				  '总共发送消息 ' + status.sent_msg_cnt + ' 条\n' +
+				  '消息速率：' + status.msg_cnt_per_min + '条/分钟\n' +
+				  'At ' + global.f.TimeToText(new Date());
+		
+		bot.sendGroupMsg(fromGroup, result);
+	}
 });
 
 function _sendQzonePost(botId, fromGroup, content_) {
 	let content              = content_.replace(/\r/g, '\n');
+	let cookie               = bot.cookies['qzone.qq.com'];
+	let token                = bot.bkn;
 	let picPattern           = /\[CQ:image,file=([^\[\]]+),url=([^\[\]]+)\]/g;
 	let picCodes             = [];
 	let picUrls              = [];
@@ -444,164 +461,156 @@ function _sendQzonePost(botId, fromGroup, content_) {
 		content = content.replace(/\[CQ:image,file=([^\[\]]+),url=([^\[\]]+)\]/g, '');
 	}
 	
-	bot.getCookies('qzone.qq.com').then(function(value) {
-		let cookie = value.data.cookies;
-		
-		bot.getCsrfToken().then(function(value) {
-			let token = !value.error ? value.data.token : undefined;
+	if (picUrls.length > 0) {
+		for (let x = 0; x < picUrls.length; x++) {
+			sa
+				.get(picUrls[x])
+				.end(function(err, res) {
+					if (err) {
+						console.error('在向 QQ 空间上传图片时出现了问题。图片地址：' + picUrls[x] + '报错：' + err);
+						return;
+					}
 
-			if (picUrls.length > 0) {
-				for (let x = 0; x < picUrls.length; x++) {
+					let imgBase = res.body.toString('Base64');
+
 					sa
-						.get(picUrls[x])
+						.post('https://up.qzone.qq.com/cgi-bin/upload/cgi_upload_image?g_tk=' + token)
+						.set('accept-encoding', 'gzip, deflate, br')
+						.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8')
+						.set('cookie', cookie)
+						.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36')
+						.send({
+							uin               : botId,
+							skey              : /skey=([^\;]+); /.exec(cookie)[1],
+							zzpaneluin        : botId,
+							zzpanelkey        : '',
+							p_uin             : botId,
+							p_skey            : /p_skey=([^\;]+);/.exec(cookie)[1],
+							qzonetoken        : '',
+							uploadtype        : 1,
+							albumtype         : 7,
+							exttype           : 0,
+							refer             : 'shuoshuo',
+							output_type       : 'jsonhtml',
+							charset           : 'utf-8',
+							output_charset    : 'utf-8',
+							upload_hd         : 1,
+							hd_width          : 2048,
+							hd_height         : 10000,
+							hd_quality        : 96,
+							backUrls          : 'http://upbak.photo.qzone.qq.com/cgi-bin/upload/cgi_upload_image,http://119.147.64.75/cgi-bin/upload/cgi_upload_image',
+							url               : 'https://up.qzone.qq.com/cgi-bin/upload/cgi_upload_image?g_tk=' + token,
+							base64            : 1,
+							jsonhtml_callback : 'callback',
+							picfile           : imgBase,
+							qzreferrer        : 'https://user.qzone.qq.com/' + botId
+						})
 						.end(function(err, res) {
+							let result = {};
+
 							if (err) {
-								console.error('在向 QQ 空间上传图片时出现了问题。图片地址：' + picUrls[x] + '报错：' + err);
+								console.error('上传图片至空间时出错：' + err);
+								picData.push({
+									url     : '',
+									albumid : '',
+									lloc    : '',
+									sloc    : '',
+									type    : 0,
+									height  : 0,
+									width   : 0
+								});
 								return;
 							}
 
-							let imgBase = res.body.toString('Base64');
+							try {
+								result = JSON.parse(res.text.substring(res.text.indexOf('frameElement.callback(') + 'frameElement.callback('.length, res.text.indexOf(');</script></body></html>')));
+							} catch (e) {
+								console.error('上传图片至空间时出错：' + e + '\n原文：' + res.text);
+								return;
+							}
 
-							sa
-								.post('https://up.qzone.qq.com/cgi-bin/upload/cgi_upload_image?g_tk=' + token)
-								.set('accept-encoding', 'gzip, deflate, br')
-								.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8')
-								.set('cookie', cookie)
-								.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36')
-								.send({
-									uin               : botId,
-									skey              : /skey=([^\;]+); /.exec(cookie)[1],
-									zzpaneluin        : botId,
-									zzpanelkey        : '',
-									p_uin             : botId,
-									p_skey            : /p_skey=([^\;]+);/.exec(cookie)[1],
-									qzonetoken        : '',
-									uploadtype        : 1,
-									albumtype         : 7,
-									exttype           : 0,
-									refer             : 'shuoshuo',
-									output_type       : 'jsonhtml',
-									charset           : 'utf-8',
-									output_charset    : 'utf-8',
-									upload_hd         : 1,
-									hd_width          : 2048,
-									hd_height         : 10000,
-									hd_quality        : 96,
-									backUrls          : 'http://upbak.photo.qzone.qq.com/cgi-bin/upload/cgi_upload_image,http://119.147.64.75/cgi-bin/upload/cgi_upload_image',
-									url               : 'https://up.qzone.qq.com/cgi-bin/upload/cgi_upload_image?g_tk=' + token,
-									base64            : 1,
-									jsonhtml_callback : 'callback',
-									picfile           : imgBase,
-									qzreferrer        : 'https://user.qzone.qq.com/' + botId
-								})
-								.end(function(err, res) {
-									let result = {};
+							if (result.ret != 0 || !result.data) {
+								console.error('上传图片至空间时出错：' + result.data.msg + result.data.ret);
+								picData.push({
+									url     : '',
+									albumid : '',
+									lloc    : '',
+									sloc    : '',
+									type    : 0,
+									height  : 0,
+									width   : 0
+								});
+								return;
+							}
+							result = result.data;
 
-									if (err) {
-										console.error('上传图片至空间时出错：' + err);
-										picData.push({
-											url     : '',
-											albumid : '',
-											lloc    : '',
-											sloc    : '',
-											type    : 0,
-											height  : 0,
-											width   : 0
-										});
-										return;
-									}
-
-									try {
-										result = JSON.parse(res.text.substring(res.text.indexOf('frameElement.callback(') + 'frameElement.callback('.length, res.text.indexOf(');</script></body></html>')));
-									} catch (e) {
-										console.error('上传图片至空间时出错：' + e + '\n原文：' + res.text);
-										return;
-									}
-
-									if (result.ret != 0 || !result.data) {
-										console.error('上传图片至空间时出错：' + result.data.msg + result.data.ret);
-										picData.push({
-											url     : '',
-											albumid : '',
-											lloc    : '',
-											sloc    : '',
-											type    : 0,
-											height  : 0,
-											width   : 0
-										});
-										return;
-									}
-									result = result.data;
-
-									picData.push({
-										url     : result.url,
-										albumid : result.albumid,
-										lloc    : result.lloc,
-										sloc    : result.sloc,
-										type    : result.type,
-										height  : result.height,
-										width   : result.width
-									});
-								}
-							);
+							picData.push({
+								url     : result.url,
+								albumid : result.albumid,
+								lloc    : result.lloc,
+								sloc    : result.sloc,
+								type    : result.type,
+								height  : result.height,
+								width   : result.width
+							});
 						}
 					);
 				}
+			);
+		}
 
-				sendPostWaitingClock = setInterval(function() {
-					if (picData.length != picUrls.length) {
-						sendPostWaitingCount += 1;
+		sendPostWaitingClock = setInterval(function() {
+			if (picData.length != picUrls.length) {
+				sendPostWaitingCount += 1;
 
-						if (sendPostWaitingCount >= 60) {
-							bot.sendGroupMsg(fromGroup, '等待上传图片时消耗了过长时间，已取消本次发送')
-							clearInterval(sendPostWaitingClock);
-							return;
+				if (sendPostWaitingCount >= 60) {
+					bot.sendGroupMsg(fromGroup, '等待上传图片时消耗了过长时间，已取消本次发送')
+					clearInterval(sendPostWaitingClock);
+					return;
 
-						}
-					} else {
-						let _picData = '';
-						let _pic_bo  = '';
-
-						for (let y = 0; y < picData.length; y++) {
-							if (picData[y].url && picData[y].url != '') {
-								_picData += ',' + picData[y].albumid +
-											',' + picData[y].lloc +
-											',' + picData[y].sloc +
-											',' + picData[y].type + 
-											',' + picData[y].height +
-											',' + picData[y].width + ',' +
-											',' + picData[y].height +
-											',' + picData[y].width
-								;
-								_pic_bo += /b&bo=(.+)/.exec(picData[y].url)[1];
-
-								if (y + 1 < picData.length) {
-									_picData += '\t';
-									_pic_bo  += ',';
-								}
-
-								if (picData.length == 1) {
-									_pic_bo  += ' ' + _pic_bo;
-								}
-							}
-						}
-
-						let __pic_bo = _pic_bo;
-						for (let z = 0; z < picData.length; z++) {
-							if (z + 1 < picData.length) {
-								_pic_bo += '\t' + __pic_bo;
-							}
-						}
-
-						sendQzonePost(botId, cookie, token, fromGroup, content, _picData, _pic_bo);
-						clearInterval(sendPostWaitingClock);
-					}
-				}, 1000);
+				}
 			} else {
-				sendQzonePost(botId, cookie, token, fromGroup, content);
+				let _picData = '';
+				let _pic_bo  = '';
+
+				for (let y = 0; y < picData.length; y++) {
+					if (picData[y].url && picData[y].url != '') {
+						_picData += ',' + picData[y].albumid +
+									',' + picData[y].lloc +
+									',' + picData[y].sloc +
+									',' + picData[y].type + 
+									',' + picData[y].height +
+									',' + picData[y].width + ',' +
+									',' + picData[y].height +
+									',' + picData[y].width
+						;
+						_pic_bo += /b&bo=(.+)/.exec(picData[y].url)[1];
+
+						if (y + 1 < picData.length) {
+							_picData += '\t';
+							_pic_bo  += ',';
+						}
+
+						if (picData.length == 1) {
+							_pic_bo  += ' ' + _pic_bo;
+						}
+					}
+				}
+
+				let __pic_bo = _pic_bo;
+				for (let z = 0; z < picData.length; z++) {
+					if (z + 1 < picData.length) {
+						_pic_bo += '\t' + __pic_bo;
+					}
+				}
+
+				sendQzonePost(botId, cookie, token, fromGroup, content, _picData, _pic_bo);
+				clearInterval(sendPostWaitingClock);
 			}
-		});
-	});
+		}, 1000);
+	} else {
+		sendQzonePost(botId, cookie, token, fromGroup, content);
+	}
 }
 
 function sendQzonePost(botId, cookie, token, fromGroup, content, picData = '', pic_bo = '') {
