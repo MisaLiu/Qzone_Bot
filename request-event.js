@@ -6,7 +6,7 @@ bot.on('request.friend.add', function(e) {
 	bot.setFriendAddRequest(e.flag, true);
 	bot.sendGroupMsg(_settings.groupId, '有新用户加入了频道：' + e.user_id);
 	setTimeout(function() {
-		bot.sendPrivateMsg(e.user_id, '你好呀，欢迎加入本频道！\n请先阅读 https://www.kancloud.cn/himlaos_misa/midrai_channel_docs/2484124 以获取必要的信息');
+		bot.sendPrivateMsg(e.user_id, '你好呀，欢迎加入本频道！\n发送 /help 获取帮助菜单');
 	}, 4000);
 });
 
