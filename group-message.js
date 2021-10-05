@@ -135,6 +135,56 @@ bot.on('message.group', function(e) {
 			});
 		});
 	}
+	
+	// 发布投稿
+	if (command[0] == 'upload') {
+		let query         = '';
+		let uploadGuid    = command[1];
+		let contentPrefix = undefined;
+		let contentBack   = undefined;
+
+		if (command.length < 2) {
+			bot.sendGroupMsg(fromGroup, '指令格式不正确！');
+			return;
+		}
+
+		if (!uploadGuid || uploadGuid == '') {
+			bot.sendGroupMsg(fromGroup, '请输入投稿 GUID！');
+			return;
+		}
+
+		if (command.length >= 3 && command[2] != '') {
+			contentPrefix = command[2].replace(/\r/g, '\n');
+		}
+
+		if (command.lengtg >= 4 && command[3] != '') {
+			contentBack = command[3].replace(/\r/g, '\n');
+		}
+
+		query = 'SELECT * FROM uploads WHERE guid = "' + uploadGuid + '"';
+		sql.query(query, function(err, data) {
+			if (err) {
+				console.error('读取数据表 uploads 时出错：' + err);
+				bot.sendGroupMsg(fromGroup, '执行操作时出现错误。');
+				return;
+			}
+			
+			if (data.length < 1) {
+				bot.sendGroupMsg(fromGroup, '不存在该条投稿！');
+				return;
+			}
+			
+			uploadData = data[0];
+			uploadData.status = 1;
+
+			content = uploadData.content;
+			content = (uploadData.annoymous == 1 ? '匿名投稿：\n' : '来自 ' + uploadData.uid + ' 的实名投稿：\n') + 
+			          (contentPrefix ? contentPrefix : '') + content;
+			content = content + (contentBack ? contentBack : '');
+
+			_sendQzonePost(e.self_id, fromGroup, content);
+		});
+	}
 
 	/**
 	if (command[0] == 'getCookie') {
