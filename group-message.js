@@ -1,4 +1,4 @@
-﻿const { _settings, bot, sql, sa } = require('./index');
+const { _settings, bot, sql, sa } = require('./index');
 
 bot.on('message.group', function(e) {
 	// console.log(e);
@@ -135,8 +135,8 @@ bot.on('message.group', function(e) {
 			});
 		});
 	}
-	
-	// 发布投稿
+
+	// 上传投稿
 	if (command[0] == 'upload') {
 		let query         = '';
 		let uploadGuid    = command[1];
@@ -297,7 +297,7 @@ bot.on('message.group', function(e) {
 				}
 				
 				if (data.length <= 0) {
-	            	bot.sendGroupMsg(fromGroup, '没有更多投稿记录了');
+	            	bot.sendPrivateMsg(fromAccount, '没有更多投稿记录了');
 					return;
 	            }
 				
@@ -416,13 +416,13 @@ bot.on('message.group', function(e) {
 		global.f.UnmuteUser(toAccount);
 		bot.sendGroupMsg(fromGroup, '已执行操作');
 	}
-	
+
 	if (command[0] == 'status' || command[0] == 'stat') {
 		let status = bot.stat;
 		let result = '';
 
 		result += '机器人目前存活\n' +
-		          '启动时间：' + global.f.TimeToText(status.start_time) + '\n' +
+		          '启动时间：' + global.f.TimeToText(status.start_time * 1000) + '\n' +
 				  '掉线次数：' + status.lost_times + '次\n' +
 				  '总共收到消息 ' + status.recv_msg_cnt + ' 条\n' +
 				  '总共发送消息 ' + status.sent_msg_cnt + ' 条\n' +
@@ -446,6 +446,16 @@ function _sendQzonePost(botId, fromGroup, content_) {
 
 	if (!content || content == '') {
 		bot.sendGroupMsg(fromGroup, '请输入欲发送的内容！');
+		return;
+	}
+	
+	if (!cookie || cookie == '') {
+		bot.sendGroupMsg(fromGroup, '获取 Cookies 时失败');
+		return;
+	}
+	
+	if (!token || token == 0) {
+		bot.sendGroupMsg(fromGroup, '获取 Token 时失败');
 		return;
 	}
 
@@ -617,7 +627,6 @@ function sendQzonePost(botId, cookie, token, fromGroup, content, picData = '', p
 	let _send = {
 		syn_tweet_verson : 1,
 		paramstr         : 1,
-		pic_template     : '',
 		richtype         : '',
 		richval          : picData,
 		special_url      : '',
