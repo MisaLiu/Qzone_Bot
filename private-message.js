@@ -17,9 +17,10 @@ bot.on('message.private', function(e) {
 	if (command[0] == 'help' || command[0] == 'start') { // 发送帮助文档
 		let output = '欢迎加入本频道！\n' +
 			'本频道由一群热爱小爱老师但却对其生态环境及官方无可奈何的用户运营。\n\n' +
-			'→关于本频道投稿的说明请看 https://www.kancloud.cn/himlaos_misa/midrai_channel_docs/2484124 \n' +
-			'→如何使用频道？指令说明请看 https://www.kancloud.cn/himlaos_misa/midrai_channel_docs/2484125 \n' +
-			'→想要加入频道运营组？请看 https://www.kancloud.cn/himlaos_misa/midrai_channel_docs/2484124 \n' +
+			'→关于本频道的说明请看 https://t.hk.uy/aeD4\n' +
+			'→如何使用频道？指令说明请看 https://t.hk.uy/aeD5\n' +
+			'→有关本频道的投稿规则请看 https://t.hk.uy/aeD3\n' +
+			'→想要加入频道运营组？请看 https://t.hk.uy/aeD4\n' +
 			'At ' + global.f.CurrentDateText();
 		
 		if (!bot.sendPrivateMsg(fromAccount, output)) {
@@ -280,13 +281,13 @@ bot.on('message.private', function(e) {
 			});
 		}
 	}
-	
+
 	if (command[0] == 'status' || command[0] == 'stat') {
 		let status = bot.stat;
 		let result = '';
 
 		result += '机器人目前存活\n' +
-		          '启动时间：' + global.f.TimeToText(status.start_time) + '\n' +
+		          '启动时间：' + global.f.TimeToText(status.start_time * 1000) + '\n' +
 				  '掉线次数：' + status.lost_times + '次\n' +
 				  '总共收到消息 ' + status.recv_msg_cnt + ' 条\n' +
 				  '总共发送消息 ' + status.sent_msg_cnt + ' 条\n' +
