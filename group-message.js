@@ -282,7 +282,7 @@ bot.on('message.group', function(e) {
 		sql.query(query, function(err, data) {
 			if (err) {
 				console.error('读取数据表 uploads 时失败：' + err);
-				bot.sendPrivateMsg(fromAccount, '查询时出现了错误，如果一直出现错误，请联系管理员。');
+				bot.sendGroupMsg(fromGroup, '查询时出现了错误，如果一直出现错误，请联系管理员。');
 				return;
 			}
 			
@@ -292,12 +292,12 @@ bot.on('message.group', function(e) {
 			sql.query(query, function(err, data) {
 				if (err) {
 					console.error('读取数据表 uploads 时失败：' + err);
-					bot.sendPrivateMsg(fromAccount, '查询时出现了错误，如果一直出现错误，请联系管理员。');
+					bot.sendGroupMsg(fromGroup, '查询时出现了错误，如果一直出现错误，请联系管理员。');
 					return;
 				}
 				
 				if (data.length <= 0) {
-	            	bot.sendPrivateMsg(fromAccount, '没有更多投稿记录了');
+	            	bot.sendGroupMsg(fromGroup, '没有更多投稿记录了');
 					return;
 	            }
 				
