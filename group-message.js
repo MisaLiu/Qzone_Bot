@@ -1,5 +1,7 @@
 const { _settings, bot, sql, sa } = require('./index');
 
+var totalRetryTimes = 0;
+
 bot.on('message.group', function(e) {
 	// console.log(e);
 	
@@ -659,9 +661,19 @@ function sendQzonePost(botId, cookie, token, fromGroup, content, picData = '', p
 			let code = undefined;
 
 			if (err) {
-				console.error('在发送说说请求时出现了错误：', err);
-				bot.sendGroupMsg(fromGroup, '发送说说时出错');
-				return;
+			    if (totalRetryTimes < 5) {
+			        totalRetryTimes += 1;
+			        
+			        console.error('在发送说说请求时出现了错误，正进行第' + totalRetryTimes + '次重试：', err);
+			        bot.sendGroupMsg(fromGroup, '发送说说时出错，正进行第' + totalRetryTimes + '次重试');
+			        sendQzonePost(botId, bot.cookies['qzone.qq.com'], bot.bkn, fromGroup, content, picData, pic_bo)
+				    return;
+				
+			    } else {
+			        console.error('在发送说说请求时出现了错误：', err);
+			        bot.sendGroupMsg(fromGroup, '发送说说时出错。');
+				    return;
+			    }
 
 			}
 
