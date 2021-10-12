@@ -616,12 +616,12 @@ function _sendQzonePost(botId, fromGroup, content_) {
 					}
 				}
 
-				sendQzonePost(botId, cookie, token, fromGroup, content, _picData, _pic_bo);
+				sendQzonePost(botId, bot.cookies['qzone.qq.com'], bot.bkn, fromGroup, content, _picData, _pic_bo);
 				clearInterval(sendPostWaitingClock);
 			}
 		}, 1000);
 	} else {
-		sendQzonePost(botId, cookie, token, fromGroup, content);
+		sendQzonePost(botId, bot.cookies['qzone.qq.com'], bot.bkn, fromGroup, content);
 	}
 }
 
@@ -676,7 +676,9 @@ function sendQzonePost(botId, cookie, token, fromGroup, content, picData = '', p
 			    }
 
 			}
-
+            
+            totalRetryTimes = 0;
+            
 			code = /"code":\s?(-?[0-9]+)/.exec(res.text)[1];
 
 			if (code >= '0') {
